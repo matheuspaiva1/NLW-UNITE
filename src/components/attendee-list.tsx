@@ -1,6 +1,43 @@
 import {Search, MoreHorizontal, ChevronsLeft, ChevronLeft, ChevronsRight, ChevronRight} from 'lucide-react';
+import dayjs from 'dayjs'
+import 'dayjs/locale/pt-br'
+import relativeTime from 'dayjs/plugin/relativeTime'
+import { IconButton } from './icon-button';
+import { Table } from './tables/table';
+import { TableHead } from './tables/table-header';
+import { TableCell } from './tables/table-cell';
+import { TableRow } from './tables/table-row';
+import { ChangeEvent, useState } from 'react';
+import { attendees } from './data/attendees';
 
+dayjs.extend(relativeTime)
+dayjs.locale('pt-br')
 export function AttendeeList(){
+  const [search, setSearch] = useState('')
+
+  const [page, setPage] = useState(1)
+
+  const totalPages = Math.ceil(attendees.length/10)
+
+  function goToNextPage(){
+    return setPage(page + 1)
+  }
+
+  function goToPastPage(){
+    return setPage(page - 1)
+  }
+
+  function goToLastPage(){
+    return setPage(totalPages)
+  }
+
+  function goToFirstPage(){
+    return setPage(1)
+  }
+
+  function onSearchInputChanged(event: ChangeEvent<HTMLInputElement>){
+    setSearch(event.target.value)
+  }
   return (
 
     <div className="flex flex-col gap-4">
@@ -8,84 +45,85 @@ export function AttendeeList(){
         <h1 className="text-2xl font-bold">Participantes</h1>
         <div className="px-3 w-72 py-4 border border-white/10 rounded-lg text-sm flex items-center gap-3" >
           <Search className="size-4 text-emerald-300"/>
-          <input placeholder="Buscar Participante..." className="bg-transparent flex-1 outline-none border-0 p-0 text-sm"  />
+          <input onChange={onSearchInputChanged} placeholder="Buscar Participante..." className="bg-transparent flex-1 outline-none border-0 p-0 text-sm"  />
         </div>
+        {search}
+
       </div>
 
 
-      <div className=" border border-white/10 rounded-lg">
-        <table className="w-full">
+      <Table>
+
         <thead>
-          <tr className="border-b border-white/10">
-            <th className="py-3 px-4 text-sm font-semibold text-left">
+          <TableRow className="border-b border-white/10">
+            <TableHead > 
               <input type="checkbox"  className="size-4 bg-black/20 rounded border border-white/10 " name="" id="" />
-            </th>
-            <th className="py-3 px-4 text-sm font-semibold text-left">Codigo</th>
-            <th className="py-3 px-4 text-sm font-semibold text-left">Participante</th>
-            <th className="py-3 px-4 text-sm font-semibold text-left">Data de Inscrição</th>
-            <th className="py-3 px-4 text-sm font-semibold text-left">Data do Check-In</th>
-            <th style= {{width:64}} className="py-3 px-4 text-sm font-semibold text-left"></th>
-          </tr>
+            </TableHead>
+            <TableHead >Codigo</TableHead>
+            <TableHead >Participante</TableHead>
+            <TableHead >Data de Inscrição</TableHead>
+            <TableHead >Data do Check-In</TableHead>
+            <TableHead style= {{width:64}} ></TableHead>
+          </TableRow>
         </thead>
 
         <tbody>
-          {Array.from({length : 8}).map((_, i)=> {
+          {attendees.slice((page-1)*10,page*10).map((attendee)=> {
             return (
-              <tr key={i} className="border-b border-white/10 hover:bg-white/5">
-                <td className="py-3 px-4 text-sm text-zinc-300">
+              <TableRow key={attendee.id} className="border-b border-white/10 hover:bg-white/5">
+                <TableCell>
                   <input type="checkbox" className="size-4 bg-black/20 rounded border border-white/10 " name="" id="" />
-                </td>
-                <td className="py-3 px-4 text-sm text-zinc-300">52552</td>
-                <td className="py-3 px-4 text-sm text-zinc-300">
+                </TableCell>
+                <TableCell>{attendee.id}</TableCell>
+                <TableCell>
                   <div>
-                    <span className="flex flex-col gap-1 font-semibold">Matheus Paiva</span>
-                    <span>matheuspaiva000@gmail.com</span>
+                    <span className="flex flex-col gap-1 font-semibold">{attendee.name}</span>
+                    <span>{attendee.email}</span>
                   </div>
-                </td>
-                <td className="py-3 px-4 text-sm text-zinc-300">7 dias atrás</td>
-                <td className="py-3 px-4 text-sm text-zinc-300">3 dias atrás</td>
-                <td className="py-3 px-4 text-sm text-zinc-300">
+                </TableCell>
+                <TableCell>{dayjs().to(attendee.createdAt)}</TableCell>
+                <TableCell>{dayjs().to(attendee.checkedInAt)}</TableCell>
+                <TableCell>
                   <button className="bg-black/20 border border-white/10 rounded-md p-1.5 ">
                     <MoreHorizontal className="size-4"/>
                   </button>
-                </td>
-              </tr>
+                </TableCell>
+              </TableRow>
             )
           })}
         </tbody>
 
         <tfoot>
-          <tr>
-            <td colSpan={3} className="py-3 px-4 text-sm text-zinc-300">Mostrando 10 de 228 itens</td>
+          <TableRow>
+            <TableCell colSpan={3} >Mostrando 10 de {attendees.length} itens</TableCell>
             
-            <td colSpan={3} className="py-3 px-4 text-sm text-zinc-300 text-right">
+            <TableCell colSpan={3} className="text-right"> 
               <div className="inline-flex flex items-center gap-8">
-                <span>Pagina 1 de 23</span> 
+                <span>Pagina {page} de {totalPages}</span> 
                 <div className="flex gap-1.5">
-                <button className="bg-white/10 border border-white/10 rounded-md p-1.5 ">
+                <IconButton onClick={goToFirstPage} disabled={page==1}>
                   <ChevronsLeft className="size-4"/>
-                </button>
+                </IconButton>
 
-                <button className="bg-white/10 border border-white/10 rounded-md p-1.5 ">
+                <IconButton onClick={goToPastPage} disabled={page==1}>
                   <ChevronLeft className="size-4"/>
-                </button>
+                </IconButton>
 
-                <button className="bg-white/10 border border-white/10 rounded-md p-1.5 ">
+                <IconButton onClick={goToNextPage} disabled={page==totalPages}>
                   <ChevronRight className="size-4"/>
-                </button>
+                </IconButton>
 
-                <button className="bg-white/10 border border-white/10 rounded-md p-1.5 ">
+                <IconButton onClick={goToLastPage} disabled={page==totalPages}>
                   <ChevronsRight className="size-4"/>
-                </button>
+                </IconButton>
 
                 </div>
 
               </div>
-            </td>
-          </tr>
+            </TableCell>
+          </TableRow>
         </tfoot>
-        </table>
-      </div>
+        </Table>
     </div>
   )
 }
